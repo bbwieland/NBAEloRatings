@@ -5,31 +5,31 @@
 ## this function takes a year argument
 ## it returns an Elo model for that NBA season
 
-#' @export
-load_mat <- function(infile){
-  in.dt <- data.table::fread(infile, header = TRUE)
-  in.dt <- in.dt[!duplicated(in.dt[, 1]), ]
-  in.mat <- as.matrix(in.dt[, -1, with = FALSE])
-  rownames(in.mat) <- unlist(in.dt[, 1, with = FALSE])
-  in.mat
-}
-
+#' Build an Elo model
+#'
+#' This function loads a file as a matrix. It assumes that the first column
+#' contains the rownames and the subsequent columns are the sample identifiers.
+#' Any rows with duplicated row names will be dropped with the first one being
+#' kepted.
+#'
+#' @param infile Path to the input file
+#' @return A matrix of the infile
 #' @export
 elo.model.builder <- function(year,throughDate = Sys.Date()) {
   Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
   season22 <- nbastatR::game_logs(seasons = year, season_types = "Regular Season")
 
-  test <- season22 %>% group_by(idGame) %>% summarise(winner = slugTeamWinner,
+  test <- season22 %>% dplyr::group_by(idGame) %>% dplyr::summarise(winner = slugTeamWinner,
                                                       loser = slugTeamLoser,
                                                       date = dateGame)
 
-  test <- test %>% filter(date <= throughDate)
+  test <- test %>% dplyr::filter(date <= throughDate)
 
 
 
   test2 <- test[order(test$idGame,decreasing=TRUE),]
   test2 <- test[!duplicated(test$idGame),]
-  elo_results <- elo.seq(winner = test2$winner,
+  elo_results <- EloRating::elo.seq(winner = test2$winner,
                          loser = test2$loser,
                          Date = test2$date,
                          runcheck = F, k = 25)
@@ -43,7 +43,7 @@ elo.model.builder <- function(year,throughDate = Sys.Date()) {
 #' @export
 elo.by.team <- function(elo.model) {
   elo_by_team <- data.frame(elo = extract_elo(elo.model))
-  elo_by_team <- elo_by_team %>% mutate(Abbreviation = rownames(elo_by_team))
+  elo_by_team <- elo_by_team %>% dplyr::mutate(Abbreviation = rownames(elo_by_team))
   rownames(elo_by_team) = NULL
   elo_by_team
 }
@@ -55,22 +55,22 @@ elo.by.team <- function(elo.model) {
 #' @export
 team.info.table <- function(year){
 
-  site <- read_html("https://en.wikipedia.org/wiki/Wikipedia:WikiProject_National_Basketball_Association/National_Basketball_Association_team_abbreviations")
-  Abbreviation <- site %>% html_nodes("tr+ tr td:nth-child(1)") %>% html_text()
-  Team <- site %>% html_nodes("tr+ tr td+ td") %>% html_text()
-  team_names <- data.frame(Abbreviation,Team) %>% mutate(Abbreviation = gsub("\n","",Abbreviation),
+  site <- rvest::read_html("https://en.wikipedia.org/wiki/Wikipedia:WikiProject_National_Basketball_Association/National_Basketball_Association_team_abbreviations")
+  Abbreviation <- site %>% rvest::html_nodes("tr+ tr td:nth-child(1)") %>% rvest::html_text()
+  Team <- site %>% rvest::html_nodes("tr+ tr td+ td") %>% rvest::html_text()
+  team_names <- data.frame(Abbreviation,Team) %>% dplyr::mutate(Abbreviation = gsub("\n","",Abbreviation),
                                                          Team = gsub("\n","",Team))
 
   standings <- nbastatR::standings(seasons = year) %>%
-    select(slugTeam,nameTeam,nameConference,nameDivison,pctWinTeam,recordOverall) %>%
-    rename(Abbreviation = slugTeam, Team = nameTeam, Record = recordOverall,
+    dplyr::select(slugTeam,nameTeam,nameConference,nameDivison,pctWinTeam,recordOverall) %>%
+    dplyr::rename(Abbreviation = slugTeam, Team = nameTeam, Record = recordOverall,
            Conference = nameConference, Division = nameDivison, WinPct = pctWinTeam)
   standings[13,1] = "LAC"
   standings[8,1] = "DEN"
 
-  team_info <- inner_join(team_names,standings,by = "Abbreviation") %>%
-    select(-Team.x) %>%
-    rename(Team = Team.y)
+  team_info <- dplyr::inner_join(team_names,standings,by = "Abbreviation") %>%
+    dplyr::select(-Team.x) %>%
+    dplyr::rename(Team = Team.y)
 
   team_info
 }
@@ -80,7 +80,7 @@ team.info.table <- function(year){
 
 #' @export
 overall.table <- function(elo.table,info.table) {
-  newtable <- inner_join(elo.table,info.table)
+  newtable <- dplyr::inner_join(elo.table,info.table)
   newtable
 }
 
