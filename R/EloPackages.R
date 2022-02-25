@@ -42,7 +42,7 @@ elo.model.builder <- function(year,throughDate = Sys.Date()) {
 
 #' @export
 elo.by.team <- function(elo.model) {
-  elo_by_team <- data.frame(elo = extract_elo(elo.model))
+  elo_by_team <- data.frame(elo = EloRating::extract_elo(elo.model))
   elo_by_team <- elo_by_team %>% dplyr::mutate(Abbreviation = rownames(elo_by_team))
   rownames(elo_by_team) = NULL
   elo_by_team
