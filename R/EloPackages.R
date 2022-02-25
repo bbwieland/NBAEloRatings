@@ -95,8 +95,8 @@ elo.table.generator <- function(overall.table){
     dplyr::select(Abbreviation,Team,Conference,Division,WinPct,Record,elo)
 
   gt::gt(overall.table) %>%
-    gt::tab_header(title = md("**NBA Elo Rating Model**"),
-               subtitle = md("*Data scraped using nbastatR*")) %>%
+    gt::tab_header(title = gt::md("**NBA Elo Rating Model**"),
+               subtitle = gt::md("*Data scraped using nbastatR*")) %>%
     gt::data_color(columns = c(WinPct,elo),colors = RColorBrewer::brewer.pal(5,"RdYlGn")) %>%
     gt::tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
     espnscrapeR::gt_theme_538()
@@ -115,8 +115,8 @@ elo.standings.generator <- function(overall.table){
     dplyr::group_by(Conference,Division)
 
   gt::gt(overall.table) %>%
-    gt::tab_header(title = md("**NBA Elo Rating Model**"),
-               subtitle = md("*Data scraped using nbastatR*")) %>%
+    gt::tab_header(title = gt::md("**NBA Elo Rating Model**"),
+               subtitle = gt::md("*Data scraped using nbastatR*")) %>%
     gt::data_color(columns = c(WinPct,elo),colors = RColorBrewer::brewer.pal(5,"RdYlGn")) %>%
     gt::tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
     espnscrapeR::gt_theme_538()
@@ -135,8 +135,8 @@ elo.conference.generator <- function(overall.table){
     dplyr::group_by(Conference)
 
   gt::gt(overall.table) %>%
-    gt::tab_header(title = md("**NBA Elo Rating Model**"),
-               subtitle = md("*Data scraped using nbastatR*")) %>%
+    gt::tab_header(title = gt::md("**NBA Elo Rating Model**"),
+               subtitle = gt::md("*Data scraped using nbastatR*")) %>%
     gt::data_color(columns = c(WinPct,elo),colors = RColorBrewer::brewer.pal(5,"RdYlGn")) %>%
     gt::tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
     espnscrapeR::gt_theme_538()
@@ -198,8 +198,8 @@ current.day.prediction <- function(elo.table,date = Sys.Date()){
     dplyr::select(Matchup,HomeElo,AwayElo,HCAHomeElo,HCAHomeWP,HCAAwayWP,HCAWinnerPick)
 
   picks.gt <- picks.gt.data %>% gt::gt() %>%
-    gt::tab_header(title = md("**NBA Daily Picks**"),
-               subtitle = md("*Win probabilities based on Elo rating model inputs*")) %>%
+    gt::tab_header(title = gt::md("**NBA Daily Picks**"),
+               subtitle = gt::md("*Win probabilities based on Elo rating model inputs*")) %>%
     gt::data_color(columns = c(HCAHomeWP,HCAAwayWP),colors = RColorBrewer::brewer.pal(5,"RdYlGn")) %>%
     gt::data_color(columns = c(HCAWinnerPick),colors = "lightgrey") %>%
     gt::tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
