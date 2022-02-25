@@ -1,15 +1,6 @@
 ## Importing packages, setting working directory ----
 ## the working directory is customizable depending on personal preferences
 
-library(tidyverse)
-library(rvest)
-library(nbastatR)
-library(EloRating)
-library(teamcolors)
-library(gt)
-library(espnscrapeR)
-library(RColorBrewer)
-
 ## elo.model.builder function: ----
 ## this function takes a year argument
 ## it returns an Elo model for that NBA season
