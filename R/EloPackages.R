@@ -6,6 +6,15 @@
 ## it returns an Elo model for that NBA season
 
 #' @export
+load_mat <- function(infile){
+  in.dt <- data.table::fread(infile, header = TRUE)
+  in.dt <- in.dt[!duplicated(in.dt[, 1]), ]
+  in.mat <- as.matrix(in.dt[, -1, with = FALSE])
+  rownames(in.mat) <- unlist(in.dt[, 1, with = FALSE])
+  in.mat
+}
+
+#' @export
 elo.model.builder <- function(year,throughDate = Sys.Date()) {
   Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
   season22 <- nbastatR::game_logs(seasons = year, season_types = "Regular Season")
