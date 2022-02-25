@@ -7,14 +7,13 @@
 elo.model.builder(year, throughDate = Sys.Date())
 }
 \arguments{
-\item{infile}{Path to the input file}
+\item{year}{The year for which the model should be built. Defaults to "back half" of years; for 2021-22, you would use year = 2022.}
+
+\item{throughDate}{The date through which the Elo ratings should be calculated. Should use YYYY-mm-dd format.}
 }
 \value{
-A matrix of the infile
+An Elo model for the specified time parameters.
 }
 \description{
-This function loads a file as a matrix. It assumes that the first column
-contains the rownames and the subsequent columns are the sample identifiers.
-Any rows with duplicated row names will be dropped with the first one being
-kepted.
+This function generates an NBA Elo model for the given time parameters.
 }

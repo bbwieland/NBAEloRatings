@@ -7,13 +7,11 @@
 
 #' Build an Elo model
 #'
-#' This function loads a file as a matrix. It assumes that the first column
-#' contains the rownames and the subsequent columns are the sample identifiers.
-#' Any rows with duplicated row names will be dropped with the first one being
-#' kepted.
+#'This function generates an NBA Elo model for the given time parameters.
 #'
-#' @param infile Path to the input file
-#' @return A matrix of the infile
+#' @param year The year for which the model should be built. Defaults to "back half" of years; for 2021-22, you would use year = 2022.
+#' @param throughDate The date through which the Elo ratings should be calculated. Should use YYYY-mm-dd format.
+#' @return An Elo model for the specified time parameters.
 #' @export
 elo.model.builder <- function(year,throughDate = Sys.Date()) {
   Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
@@ -92,41 +90,41 @@ overall.table <- function(elo.table,info.table) {
 #' @export
 elo.table.generator <- function(overall.table){
   overall.table <- overall.table %>%
-    select(Abbreviation,Team,Conference,Division,WinPct,Record,elo)
+    dplyr::select(Abbreviation,Team,Conference,Division,WinPct,Record,elo)
 
-  gt(overall.table) %>%
-    tab_header(title = md("**NBA Elo Rating Model**"),
+  gt::gt(overall.table) %>%
+    gt::tab_header(title = md("**NBA Elo Rating Model**"),
                subtitle = md("*Data scraped using nbastatR*")) %>%
-    data_color(columns = c(WinPct,elo),colors = brewer.pal(5,"RdYlGn")) %>%
-    tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
+    gt::data_color(columns = c(WinPct,elo),colors = RColorBrewer::brewer.pal(5,"RdYlGn")) %>%
+    gt::tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
     espnscrapeR::gt_theme_538()
 }
 
 #' @export
 elo.standings.generator <- function(overall.table){
   overall.table <- overall.table %>%
-    select(Abbreviation,Team,Conference,Division,WinPct,Record,elo) %>%
-    group_by(Conference,Division)
+    dplyr::select(Abbreviation,Team,Conference,Division,WinPct,Record,elo) %>%
+    dplyr::group_by(Conference,Division)
 
-  gt(overall.table) %>%
-    tab_header(title = md("**NBA Elo Rating Model**"),
+  gt::gt(overall.table) %>%
+    gt::tab_header(title = md("**NBA Elo Rating Model**"),
                subtitle = md("*Data scraped using nbastatR*")) %>%
-    data_color(columns = c(WinPct,elo),colors = brewer.pal(5,"RdYlGn")) %>%
-    tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
+    gt::data_color(columns = c(WinPct,elo),colors = RColorBrewer::brewer.pal(5,"RdYlGn")) %>%
+    gt::tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
     espnscrapeR::gt_theme_538()
 }
 
 #' @export
 elo.conference.generator <- function(overall.table){
   overall.table <- overall.table %>%
-    select(Abbreviation,Team,Conference,Division,WinPct,Record,elo) %>%
-    group_by(Conference)
+    dplyr::select(Abbreviation,Team,Conference,Division,WinPct,Record,elo) %>%
+    dplyr::group_by(Conference)
 
-  gt(overall.table) %>%
-    tab_header(title = md("**NBA Elo Rating Model**"),
+  gt::gt(overall.table) %>%
+    gt::tab_header(title = md("**NBA Elo Rating Model**"),
                subtitle = md("*Data scraped using nbastatR*")) %>%
-    data_color(columns = c(WinPct,elo),colors = brewer.pal(5,"RdYlGn")) %>%
-    tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
+    gt::data_color(columns = c(WinPct,elo),colors = RColorBrewer::brewer.pal(5,"RdYlGn")) %>%
+    gt::tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
     espnscrapeR::gt_theme_538()
 
 }
@@ -145,51 +143,51 @@ current.day.prediction <- function(elo.table,date = Sys.Date()){
 
   Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
   home.teams <- nbastatR::current_schedule() %>%
-    select(dateGame,idGame,slugTeamHome) %>%
-    filter(dateGame == date) %>%
-    inner_join(elo.table,by = c("slugTeamHome" = "Abbreviation")) %>%
-    rename(HomeTeam = slugTeamHome, HomeElo = elo)
+    dplyr::select(dateGame,idGame,slugTeamHome) %>%
+    dplyr::filter(dateGame == date) %>%
+    dplyr::inner_join(elo.table,by = c("slugTeamHome" = "Abbreviation")) %>%
+    dplyr::rename(HomeTeam = slugTeamHome, HomeElo = elo)
 
   away.teams <- nbastatR::current_schedule() %>%
-    select(dateGame,idGame,slugTeamAway) %>%
-    filter(dateGame == date) %>%
-    inner_join(elo.table,by = c("slugTeamAway" = "Abbreviation")) %>%
-    rename(AwayTeam = slugTeamAway, AwayElo = elo)
+    dplyr::select(dateGame,idGame,slugTeamAway) %>%
+    dplyr::filter(dateGame == date) %>%
+    dplyr::inner_join(elo.table,by = c("slugTeamAway" = "Abbreviation")) %>%
+    dplyr::rename(AwayTeam = slugTeamAway, AwayElo = elo)
 
-  day.games <- inner_join(home.teams,away.teams,by = "idGame") %>%
-    mutate(HomeWP = round(elo.prediction(HomeElo,AwayElo),3),
+  day.games <- dplyr::inner_join(home.teams,away.teams,by = "idGame") %>%
+    dplyr::mutate(HomeWP = round(elo.prediction(HomeElo,AwayElo),3),
            AwayWP = round(elo.prediction(AwayElo,HomeElo),3)) %>%
-    rename(dateGame = dateGame.x) %>% select(-dateGame.y) %>%
-    mutate(WinnerPick = ifelse(HomeWP >= .5,HomeTeam,AwayTeam)) %>%
-    mutate(HCAHomeElo = HomeElo + 50,
+    dplyr::rename(dateGame = dateGame.x) %>% select(-dateGame.y) %>%
+    dplyr::mutate(WinnerPick = ifelse(HomeWP >= .5,HomeTeam,AwayTeam)) %>%
+    dplyr::mutate(HCAHomeElo = HomeElo + 50,
            HCAHomeWP = round(elo.prediction(HCAHomeElo,AwayElo),3),
            HCAAwayWP = round(elo.prediction(AwayElo,HCAHomeElo),3),
            HCAWinnerPick = ifelse(HCAHomeWP >= .5,HomeTeam,AwayTeam))
 
   winner.picks <- day.games %>%
-    mutate(Matchup = paste0(AwayTeam," @ ",HomeTeam)) %>%
-    select(idGame,Matchup,HCAWinnerPick)
+    dplyr::mutate(Matchup = paste0(AwayTeam," @ ",HomeTeam)) %>%
+    dplyr::select(idGame,Matchup,HCAWinnerPick)
 
   picks.gt.data <- day.games %>%
-    mutate(Matchup = paste0(HomeTeam," vs. ",AwayTeam)) %>%
-    select(Matchup,HomeElo,AwayElo,HCAHomeElo,HCAHomeWP,HCAAwayWP,HCAWinnerPick)
+    dplyr::mutate(Matchup = paste0(HomeTeam," vs. ",AwayTeam)) %>%
+    dplyr::select(Matchup,HomeElo,AwayElo,HCAHomeElo,HCAHomeWP,HCAAwayWP,HCAWinnerPick)
 
-  picks.gt <- picks.gt.data %>% gt() %>%
-    tab_header(title = md("**NBA Daily Picks**"),
+  picks.gt <- picks.gt.data %>% gt::gt() %>%
+    gt::tab_header(title = md("**NBA Daily Picks**"),
                subtitle = md("*Win probabilities based on Elo rating model inputs*")) %>%
-    data_color(columns = c(HCAHomeWP,HCAAwayWP),colors = brewer.pal(5,"RdYlGn")) %>%
-    data_color(columns = c(HCAWinnerPick),colors = "lightgrey") %>%
-    tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
+    gt::data_color(columns = c(HCAHomeWP,HCAAwayWP),colors = RColorBrewer::brewer.pal(5,"RdYlGn")) %>%
+    gt::data_color(columns = c(HCAWinnerPick),colors = "lightgrey") %>%
+    gt::tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
     espnscrapeR::gt_theme_538() %>%
-    fmt_percent(columns = c(HCAHomeWP,HCAAwayWP),
+    gt::fmt_percent(columns = c(HCAHomeWP,HCAAwayWP),
                 decimals = 1) %>%
-    cols_label(HomeElo = "Home Team Elo",
+    gt::cols_label(HomeElo = "Home Team Elo",
                AwayElo = "Away Team Elo",
                HCAHomeElo = "Home Team Elo Home-Court Adjusted",
                HCAHomeWP = "Home Win Probability",
                HCAAwayWP = "Away Win Probability",
                HCAWinnerPick = "Predicted Winner") %>%
-    cols_align(
+    gt::cols_align(
       align = "center",
       columns = everything()
     )
@@ -199,10 +197,9 @@ current.day.prediction <- function(elo.table,date = Sys.Date()){
 }
 
 
-## Malleability ----
-
+#'
 #' @export
-overallFunctionWrapper = function(year,date = Sys.Date()){
+overall.function.wrapper = function(year,date = Sys.Date()){
 
   eloModel = elo.model.builder(year,throughDate = date)
 
