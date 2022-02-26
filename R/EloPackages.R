@@ -7,9 +7,9 @@
 #' @return An Elo model for the specified time parameters.
 #' @export
 elo.model.builder <- function(year,throughDate = Sys.Date()) {
-  Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
+  Sys.setenv("VROOM_CONNECTION_SIZE" = 131072*2)
 
-  season22 <- nbastatR::game_logs(seasons = year, season_types = "Regular Season")
+  season22 <- nbastatR::game_logs(seasons = year, season_types = "Regular Season",result_types = "team",assign_to_environment = F)
 
   test <- season22 %>% dplyr::group_by(idGame) %>% dplyr::summarise(winner = slugTeamWinner,
                                                       loser = slugTeamLoser,
