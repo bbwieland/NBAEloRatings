@@ -7,6 +7,7 @@
 #' @return An Elo model for the specified time parameters.
 #' @export
 elo.model.builder <- function(year,throughDate = Sys.Date()) {
+  Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 
   season22 <- nbastatR::game_logs(seasons = year, season_types = "Regular Season")
 
@@ -173,6 +174,7 @@ elo.prediction <- function(elorating1,elorating2) {
 #' @return A list of predictions for the given date.
 #' @export
 current.day.prediction <- function(elo.table,date = Sys.Date()){
+  Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 
   home.teams <- nbastatR::current_schedule() %>%
     dplyr::select(dateGame,idGame,slugTeamHome) %>%
