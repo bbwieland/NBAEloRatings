@@ -7,7 +7,7 @@
 #' @return An Elo model for the specified time parameters.
 #' @export
 elo.model.builder <- function(year,throughDate = Sys.Date()) {
-  Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
+
   season22 <- nbastatR::game_logs(seasons = year, season_types = "Regular Season")
 
   test <- season22 %>% dplyr::group_by(idGame) %>% dplyr::summarise(winner = slugTeamWinner,
@@ -94,12 +94,15 @@ elo.table.generator <- function(overall.table){
   overall.table <- overall.table %>%
     dplyr::select(Abbreviation,Team,Conference,Division,WinPct,Record,elo)
 
-  gt::gt(overall.table) %>%
+  gt.table = gt::gt(overall.table) %>%
     gt::tab_header(title = gt::md("**NBA Elo Rating Model**"),
                subtitle = gt::md("*Data scraped using nbastatR*")) %>%
     gt::data_color(columns = c(WinPct,elo),colors = RColorBrewer::brewer.pal(5,"RdYlGn")) %>%
     gt::tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
     espnscrapeR::gt_theme_538()
+
+  return(list(OverallData = overall.table,OverallGT = gt.table))
+
 }
 
 #' Build a visualizable Elo rating table sorted by conference and division.
@@ -114,12 +117,15 @@ elo.standings.generator <- function(overall.table){
     dplyr::select(Abbreviation,Team,Conference,Division,WinPct,Record,elo) %>%
     dplyr::group_by(Conference,Division)
 
-  gt::gt(overall.table) %>%
+  gt.table= gt::gt(overall.table) %>%
     gt::tab_header(title = gt::md("**NBA Elo Rating Model**"),
                subtitle = gt::md("*Data scraped using nbastatR*")) %>%
     gt::data_color(columns = c(WinPct,elo),colors = RColorBrewer::brewer.pal(5,"RdYlGn")) %>%
     gt::tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
     espnscrapeR::gt_theme_538()
+
+  return(list(DivisionData = overall.table,DivisionGT = gt.table))
+
 }
 
 #' Build a visualizable Elo rating table sorted by conference
@@ -134,12 +140,14 @@ elo.conference.generator <- function(overall.table){
     dplyr::select(Abbreviation,Team,Conference,Division,WinPct,Record,elo) %>%
     dplyr::group_by(Conference)
 
-  gt::gt(overall.table) %>%
+  gt.table = gt::gt(overall.table) %>%
     gt::tab_header(title = gt::md("**NBA Elo Rating Model**"),
                subtitle = gt::md("*Data scraped using nbastatR*")) %>%
     gt::data_color(columns = c(WinPct,elo),colors = RColorBrewer::brewer.pal(5,"RdYlGn")) %>%
     gt::tab_source_note(source_note = paste0("Date generated: ",Sys.Date())) %>%
     espnscrapeR::gt_theme_538()
+
+  return(list(ConferenceData = overall.table,ConferenceGT = gt.table))
 
 }
 
@@ -166,7 +174,6 @@ elo.prediction <- function(elorating1,elorating2) {
 #' @export
 current.day.prediction <- function(elo.table,date = Sys.Date()){
 
-  Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
   home.teams <- nbastatR::current_schedule() %>%
     dplyr::select(dateGame,idGame,slugTeamHome) %>%
     dplyr::filter(dateGame == date) %>%
